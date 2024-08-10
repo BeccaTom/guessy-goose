@@ -1,0 +1,46 @@
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  width: 100%;
+  overflow-x: hidden; 
+}
+
+.homepage-container {
+  position: relative;
+  min-width: 100vw;
+  min-height: 100vh; 
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #f4f4f4;
+  padding: 0; 
+  box-sizing: border-box; 
+}
+
+#root, .homepage-container {
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+.logout-button {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  padding: 10px 20px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  z-index: 1000;
+}
+
+.logout-button:hover {
+  background-color: #0056b3;
+}
+
+.homepage-content {
+  text-align: center;
+  width: 100%;
+}

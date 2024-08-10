@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { auth } from "./firebase-config";
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
-import "./AuthComponent.css"; // Import the CSS file for styling
+import "./AuthComponent.css"; 
 
 const AuthComponent: React.FC = () => {
   const [email, setEmail] = useState<string>("");

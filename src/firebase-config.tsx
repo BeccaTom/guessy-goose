@@ -1,8 +1,6 @@
 import { initializeApp } from "firebase/app";
-import { getAuth, GoogleAuthProvider } from "firebase/auth"; // Import GoogleAuthProvider
-import { getAnalytics } from "firebase/analytics";
+import { getAuth, GoogleAuthProvider } from "firebase/auth";  
 
-// Your web app's Firebase configuration
 const firebaseConfig = {
   apiKey: "AIzaSyAWmzjeFHW4Bz0OTPhaf4ZDhTJ7R8_TNsk",
   authDomain: "ai-image-game-ed54c.firebaseapp.com",
@@ -13,9 +11,8 @@ const firebaseConfig = {
   measurementId: "G-NDZM586101"
 };
 
-// Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
-const googleProvider = new GoogleAuthProvider(); // Initialize Google Provider
+const googleProvider = new GoogleAuthProvider();  
 
 export { auth, googleProvider };
