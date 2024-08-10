@@ -1,22 +1,38 @@
 import React from "react";
 
-interface LogoutConfirmationModalProps {
+interface ConfirmationModalProps {
   open: boolean;
   onClose: () => void;
   onConfirm: () => void;
+  title: string;
+  message: string;
+  confirmButtonText?: string;  // Optional, to customize the confirm button text
+  cancelButtonText?: string;   // Optional, to customize the cancel button text
 }
 
-const LogoutConfirmationModal: React.FC<LogoutConfirmationModalProps> = ({ open, onClose, onConfirm }) => {
+const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
+  open,
+  onClose,
+  onConfirm,
+  title,
+  message,
+  confirmButtonText = "Confirm",
+  cancelButtonText = "Cancel",
+}) => {
   if (!open) return null;
 
   return (
     <div style={modalStyles.overlay}>
       <div style={modalStyles.modal}>
-        <h2>Log Out</h2>
-        <p>Are you sure you want to log out?</p>
+        <h2>{title}</h2>
+        <p>{message}</p>
         <div style={modalStyles.actions}>
-          <button onClick={onClose} style={modalStyles.button}>Cancel</button>
-          <button onClick={onConfirm} style={modalStyles.button}>Log Out</button>
+          <button onClick={onClose} style={modalStyles.cancelButton}>
+            {cancelButtonText}
+          </button>
+          <button onClick={onConfirm} style={modalStyles.confirmButton}>
+            {confirmButtonText}
+          </button>
         </div>
       </div>
     </div>
@@ -49,7 +65,7 @@ const modalStyles = {
     display: "flex",
     justifyContent: "space-between",
   },
-  button: {
+  confirmButton: {
     padding: "10px 20px",
     border: "none",
     borderRadius: "4px",
@@ -57,6 +73,14 @@ const modalStyles = {
     background: "#007BFF",
     color: "#fff",
   },
+  cancelButton: {
+    padding: "10px 20px",
+    border: "none",
+    borderRadius: "4px",
+    cursor: "pointer",
+    background: "#6c757d",
+    color: "#fff",
+  },
 };
 
-export default LogoutConfirmationModal;
+export default ConfirmationModal;

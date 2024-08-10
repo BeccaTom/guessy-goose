@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { doc, getDoc, updateDoc, arrayUnion } from "firebase/firestore";
-import { db } from "./firebase-config";  // Import the Firestore instance
-import { auth } from "./firebase-config";  // Import the authentication instance
+import { collection, query, where, getDocs, updateDoc, arrayUnion } from "firebase/firestore";
+import { db } from "./firebase-config";
+import { auth } from "./firebase-config";
 
 const JoinGame: React.FC = () => {
   const [gameCode, setGameCode] = useState<string>("");
@@ -16,10 +16,13 @@ const JoinGame: React.FC = () => {
     }
 
     try {
-      const gameRef = doc(db, "games", gameCode);
-      const gameDoc = await getDoc(gameRef);
+      const q = query(collection(db, "games"), where("gameCode", "==", gameCode));
+      const querySnapshot = await getDocs(q);
 
-      if (gameDoc.exists()) {
+      if (!querySnapshot.empty) {
+        const gameDoc = querySnapshot.docs[0]; // Assuming game codes are unique and using the first match
+        const gameRef = gameDoc.ref;
+
         const gameData = gameDoc.data();
 
         // Add current player to the game

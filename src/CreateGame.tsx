@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { createGame } from "./gameService";  // Import createGame function
+import { createGame, deleteGame } from "./gameService";  // Import createGame and deleteGame functions
 import { auth } from "./firebase-config";  // Import Firebase auth
+import ConfirmationModal from "./ConfirmationModal";  // Import the ConfirmationModal component
 
 const CreateGame: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   const [maxPlayers, setMaxPlayers] = useState<number>(4);
@@ -9,6 +10,7 @@ const CreateGame: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   const [players, setPlayers] = useState<any[]>([]);  // Store the list of players
   const [isCopied, setIsCopied] = useState<boolean>(false);
   const [copiedMessage, setCopiedMessage] = useState<string>("");
+  const [modalOpen, setModalOpen] = useState<boolean>(false);
 
   useEffect(() => {
     if (gameCode) {
@@ -20,6 +22,15 @@ const CreateGame: React.FC<{ onBack: () => void }> = ({ onBack }) => {
           profilePic: currentUser.photoURL || "https://example.com/default-profile-pic.jpg"
         };
         setPlayers([userObject]);  // Add the current user to the list of players
+
+        // Cleanup effect to delete the game if the component unmounts (user navigates away)
+        return () => {
+          deleteGame(gameCode).then(() => {
+            console.log("Game deleted due to navigation away from game code page.");
+          }).catch((error) => {
+            console.error("Failed to delete game:", error);
+          });
+        };
       }
     }
   }, [gameCode]);
@@ -42,6 +53,27 @@ const CreateGame: React.FC<{ onBack: () => void }> = ({ onBack }) => {
         setIsCopied(false);
         setCopiedMessage(gameCode || ""); // Revert to showing the game code
       }, 1500);
+    }
+  };
+
+  const handleStartGame = () => {
+    console.log("Game started with code:", gameCode);
+    // Implement game start logic here
+  };
+
+  const handleBackButton = () => {
+    setModalOpen(true);
+  };
+
+  const confirmBack = () => {
+    if (gameCode) {
+      deleteGame(gameCode).then(() => {
+        console.log("Game deleted by navigating back.");
+        setGameCode(null);
+        onBack();
+      }).catch((error) => {
+        console.error("Failed to delete game:", error);
+      });
     }
   };
 
@@ -75,13 +107,13 @@ const CreateGame: React.FC<{ onBack: () => void }> = ({ onBack }) => {
           <div className="mt-6">
             <button
               className="w-full p-2 bg-blue-500 text-white rounded-md hover:bg-blue-700 mb-4"
-              onClick={() => console.log("Starting game...")}
+              onClick={handleStartGame}
             >
               Start Game
             </button>
           </div>
           <button
-            onClick={() => setGameCode(null)}
+            onClick={handleBackButton}
             className="text-blue-500 hover:underline mt-4"
           >
             Back to Create Game
@@ -126,6 +158,16 @@ const CreateGame: React.FC<{ onBack: () => void }> = ({ onBack }) => {
           </button>
         </div>
       )}
+      
+      <ConfirmationModal
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        onConfirm={confirmBack}
+        title="Delete Game"
+        message="Are you sure you want to go back? This will delete the current game."
+        confirmButtonText="Delete Game"
+        cancelButtonText="Cancel"
+      />
     </div>
   );
 };

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { doc, getDoc } from "firebase/firestore";
+import { doc, getDocs, query, collection, where } from "firebase/firestore";
 import { db } from "./firebase-config";
 
 interface Player {
@@ -17,12 +17,18 @@ const GameWaitingRoom: React.FC = () => {
   useEffect(() => {
     const fetchGameData = async () => {
       try {
-        const gameRef = doc(db, "games", gameCode);
-        const gameDoc = await getDoc(gameRef);
-
-        if (gameDoc.exists()) {
+        const q = query(collection(db, "games"), where("gameCode", "==", gameCode));
+        const querySnapshot = await getDocs(q);
+  
+        if (!querySnapshot.empty) {
+          const gameDoc = querySnapshot.docs[0]; // Assuming game codes are unique and using the first match
           const gameData = gameDoc.data();
-          setPlayers(gameData?.playersJoined || []);
+
+          if (gameData) {
+            setPlayers(gameData?.playersJoined || []);
+          } else {
+            setError("Game not found.");
+          }
         } else {
           setError("Game not found.");
         }
