@@ -81,17 +81,19 @@ const HomePage: React.FC = () => {
       >
         Logout
       </button>
+
+      {/* Goosey Goose Image centered above the text */}
       <div className="text-center">
-        <img src={guessyGooseImage} alt="Guessy Goose" className="mb-4 w-32 h-auto" />
-        <h1 className="text-7xl font-bold mb-6 text-white text-shadow-customTurquoise">
+        <img src={guessyGooseImage} alt="Guessy Goose" className="mb-4 w-32 h-auto mx-auto" />
+        <h1 className="text-7xl font-extrabold mb-6 text-customDarkGray tracking-tight">
           Guessy Goose
         </h1>
         <div className="flex space-x-4 justify-center">
-          <button className="bg-customTurquoise text-white text-xl px-6 py-4 rounded-md hover:bg-customDarkTurquoise w-52">
-            START NEW GAME
+          <button className="bg-white text-customDarkGray text-xl px-8 py-4 w-60 rounded-2xl border border-gray-200 hover:bg-gray-100 transition">
+            Start New Game
           </button>
-          <button className="bg-customOrange text-white text-xl px-6 py-4 rounded-md hover:bg-customDarkOrange w-52">
-            JOIN GAME
+          <button className="bg-white text-customDarkGray text-xl px-8 py-4 w-60 rounded-2xl border border-gray-200 hover:bg-gray-100 transition">
+            Join Game
           </button>
         </div>
       </div>
