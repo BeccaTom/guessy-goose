@@ -64,7 +64,10 @@ const AuthComponent: React.FC = () => {
   return (
     <div className="auth-container">
       <div className="auth-box">
-        <h2>{isLogin ? "Login" : "Sign Up"}</h2>
+      <img src={guessyGooseImage} alt="Guessy Goose" className="mb-4 w-24 h-auto mx-auto" />
+      <h1 className="text-5xl font-extrabold mb-6 text-customDarkGray tracking-tight">Guessy Goose</h1>
+
+        <h2 class="text-xl font-extrabold">{isLogin ? "Login" : "Sign Up"}</h2>
         <input
           type="email"
           value={email}

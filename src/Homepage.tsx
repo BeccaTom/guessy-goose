@@ -3,12 +3,13 @@ import { useNavigate } from "react-router-dom";
 import { auth } from "./firebase-config";
 import { signOut } from "firebase/auth";
 import LogoutConfirmationModal from "./LogoutConfirmationModal";
+import CreateGame from "./CreateGame";
 import guessyGooseImage from './assets/guessy-goose.png';
-import EmojiBackground from './EmojiBackground';
 import './HomePage.css';
 
 const HomePage: React.FC = () => {
   const [modalOpen, setModalOpen] = useState(false);
+  const [showCreateGame, setShowCreateGame] = useState(false);
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -37,8 +38,6 @@ const HomePage: React.FC = () => {
 
   return (
     <div className="relative flex flex-col items-center justify-center h-screen w-screen">
-      <EmojiBackground /> {/* Reusing Emoji Background Component */}
-
       <button
         onClick={handleOpenModal}
         className="absolute top-5 right-5 bg-gray-400 text-white px-4 py-2 rounded-md hover:bg-gray-500"
@@ -46,20 +45,26 @@ const HomePage: React.FC = () => {
         Logout
       </button>
 
-      {/* Goosey Goose Image centered above the text */}
       <div className="text-center">
         <img src={guessyGooseImage} alt="Guessy Goose" className="mb-4 w-32 h-auto mx-auto" />
-        <h1 className="text-7xl font-extrabold mb-6 text-customDarkGray tracking-tight">
+        <h1 className="text-7xl font-extrabold mb-6 text-customDarkGray tracking-tight text-shadow-sm">
           Guessy Goose
         </h1>
-        <div className="flex space-x-4 justify-center">
-          <button className="bg-white text-customDarkGray text-xl px-8 py-4 w-60 rounded-2xl border border-gray-200 hover:bg-gray-100 transition">
-            Start New Game
-          </button>
-          <button className="bg-white text-customDarkGray text-xl px-8 py-4 w-60 rounded-2xl border border-gray-200 hover:bg-gray-100 transition">
-            Join Game
-          </button>
-        </div>
+        {showCreateGame ? (
+          <CreateGame onBack={() => setShowCreateGame(false)} />
+        ) : (
+          <div className="flex space-x-4 justify-center">
+            <button
+              className="bg-white text-customDarkGray text-xl px-8 py-4 w-60 rounded-2xl border border-gray-200 hover:bg-gray-100 transition"
+              onClick={() => setShowCreateGame(true)}
+            >
+              Start New Game
+            </button>
+            <button className="bg-white text-customDarkGray text-xl px-8 py-4 w-60 rounded-2xl border border-gray-200 hover:bg-gray-100 transition">
+              Join Game
+            </button>
+          </div>
+        )}
       </div>
 
       <LogoutConfirmationModal
