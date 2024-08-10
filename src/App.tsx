@@ -3,6 +3,9 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import AuthComponent from './AuthComponent';
 import Homepage from './Homepage';
 import EmojiBackground from './EmojiBackground';
+import CreateGame from "./CreateGame";
+import JoinGame from "./JoinGame";
+import GameWaitingRoom from "./GameWaitingRoom";
 
 const App: React.FC = () => {
   return (
@@ -11,8 +14,11 @@ const App: React.FC = () => {
       <div className="absolute inset-0">
         <Router>
           <Routes>
-            <Route path="/" element={<AuthComponent />} />
-            <Route path="/home" element={<Homepage />} />
+          <Route path="/" element={<AuthComponent />} />
+          <Route path="/home" element={<Homepage />} />
+          <Route path="/create-game" element={<CreateGame onBack={() => {}} />} />
+          <Route path="/join-game" element={<JoinGame />} />
+          <Route path="/game/:gameCode" element={<GameWaitingRoom />} />
           </Routes>
         </Router>
       </div>

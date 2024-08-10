@@ -1,34 +1,48 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { createGame } from "./gameService";  // Import createGame function
+import { auth } from "./firebase-config";  // Import Firebase auth
 
 const CreateGame: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   const [maxPlayers, setMaxPlayers] = useState<number>(4);
   const [allowStrangers, setAllowStrangers] = useState<boolean>(false);
   const [gameCode, setGameCode] = useState<string | null>(null);
+  const [players, setPlayers] = useState<any[]>([]);  // Store the list of players
+  const [isCopied, setIsCopied] = useState<boolean>(false);
+  const [copiedMessage, setCopiedMessage] = useState<string>("");
 
-  const generateGameCode = () => {
-    return Math.random().toString(36).substr(2, 6).toUpperCase();
-  };
+  useEffect(() => {
+    if (gameCode) {
+      const currentUser = auth.currentUser;
+      if (currentUser) {
+        const userObject = {
+          uid: currentUser.uid,
+          username: currentUser.displayName || "Anonymous",
+          profilePic: currentUser.photoURL || "https://example.com/default-profile-pic.jpg"
+        };
+        setPlayers([userObject]);  // Add the current user to the list of players
+      }
+    }
+  }, [gameCode]);
 
-  const handleSubmit = () => {
-    const code = generateGameCode();
-    setGameCode(code);
+  const handleSubmit = async () => {
+    try {
+      const code = await createGame(maxPlayers, allowStrangers);
+      setGameCode(code);
+    } catch (error) {
+      console.error("Error creating game:", error);
+    }
   };
 
   const handleCopyGameCode = () => {
     if (gameCode) {
       navigator.clipboard.writeText(gameCode);
-      alert("Game code copied to clipboard!");
+      setIsCopied(true);
+      setCopiedMessage("Copied!");
+      setTimeout(() => {
+        setIsCopied(false);
+        setCopiedMessage(gameCode || ""); // Revert to showing the game code
+      }, 1500);
     }
-  };
-
-  const handleStartGame = () => {
-    // Handle starting the game here
-    console.log("Game started with code:", gameCode);
-  };
-
-  const handleSeeMyGames = () => {
-    // Handle redirecting to user's games
-    console.log("Redirecting to user's games...");
   };
 
   return (
@@ -38,44 +52,53 @@ const CreateGame: React.FC<{ onBack: () => void }> = ({ onBack }) => {
           <h2 className="text-2xl mb-4">Game Created!</h2>
           <p className="text-lg mb-4">Share this game code with your friends:</p>
           <div
-            className="bg-gray-100 p-3 rounded-lg cursor-pointer hover:bg-gray-200"
+            className={`p-3 rounded-lg cursor-pointer ${isCopied ? 'bg-green-200' : 'bg-gray-100 hover:bg-gray-200'}`}
             onClick={handleCopyGameCode}
           >
-            {gameCode}
+            {copiedMessage || gameCode}
           </div>
+
+          {/* Display list of players in the waiting room */}
+          <div className="mt-6">
+            <h3 className="text-xl mb-4">Players Joined</h3>
+            <ul className="list-none p-0">
+              {players.map((player) => (
+                <li key={player.uid} className="flex items-center mb-2">
+                  <img src={player.profilePic} alt={player.username} className="w-10 h-10 rounded-full mr-4" />
+                  <span className="text-lg">{player.username}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Additional UI elements */}
           <div className="mt-6">
             <button
               className="w-full p-2 bg-blue-500 text-white rounded-md hover:bg-blue-700 mb-4"
-              onClick={handleStartGame}
+              onClick={() => console.log("Starting game...")}
             >
               Start Game
             </button>
-            <button
-              className="w-full p-2 bg-gray-500 text-white rounded-md hover:bg-gray-700"
-              onClick={handleSeeMyGames}
-            >
-              See My Games
-            </button>
           </div>
           <button
-            onClick={() => setGameCode(null)} // Go back to the create form
+            onClick={() => setGameCode(null)}
             className="text-blue-500 hover:underline mt-4"
           >
-            Back To Create Game
+            Back to Create Game
           </button>
         </div>
       ) : (
         <div>
           <h2 className="text-2xl mb-4">Create a New Game</h2>
           <div className="mb-4">
-            <label className="block text-left mb-2">Max Players:</label>
+            <label className="block text-left mb-2">Max Players (2-12):</label>
             <input
               type="number"
               value={maxPlayers}
-              onChange={(e) => setMaxPlayers(Number(e.target.value))}
+              onChange={(e) => setMaxPlayers(Math.min(Math.max(2, Number(e.target.value)), 12))}
               className="w-full p-2 border rounded-md"
               min={2}
-              max={10}
+              max={12}
             />
           </div>
           <div className="mb-4 text-left">

@@ -4,12 +4,14 @@ import { auth } from "./firebase-config";
 import { signOut } from "firebase/auth";
 import LogoutConfirmationModal from "./LogoutConfirmationModal";
 import CreateGame from "./CreateGame";
+import JoinGame from "./JoinGame";  // Import the JoinGame component
 import guessyGooseImage from './assets/guessy-goose.png';
 import './HomePage.css';
 
 const HomePage: React.FC = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [showCreateGame, setShowCreateGame] = useState(false);
+  const [showJoinGame, setShowJoinGame] = useState(false); // New state for JoinGame
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -52,6 +54,8 @@ const HomePage: React.FC = () => {
         </h1>
         {showCreateGame ? (
           <CreateGame onBack={() => setShowCreateGame(false)} />
+        ) : showJoinGame ? (  // Conditionally render JoinGame component
+          <JoinGame />
         ) : (
           <div className="flex space-x-4 justify-center">
             <button
@@ -60,7 +64,10 @@ const HomePage: React.FC = () => {
             >
               Start New Game
             </button>
-            <button className="bg-white text-customDarkGray text-xl px-8 py-4 w-60 rounded-2xl border border-gray-200 hover:bg-gray-100 transition">
+            <button
+              className="bg-white text-customDarkGray text-xl px-8 py-4 w-60 rounded-2xl border border-gray-200 hover:bg-gray-100 transition"
+              onClick={() => setShowJoinGame(true)}  // Set the state to show the JoinGame component
+            >
               Join Game
             </button>
           </div>
