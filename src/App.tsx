@@ -1,20 +1,23 @@
-import './App.css'
-import Homepage from "./Homepage";
-import AuthComponent from './AuthComponent.tsx'; 
-import { BrowserRouter as Router, Route, Routes, Navigate } from "react-router-dom";
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import AuthComponent from './AuthComponent';
+import Homepage from './Homepage';
+import EmojiBackground from './EmojiBackground';
 
-function App() {
+const App: React.FC = () => {
   return (
-    <>
-     <Router>
-      <Routes>
-        <Route path="/" element={<AuthComponent />} />
-        <Route path="/home" element={<Homepage />} />
-        <Route path="*" element={<Navigate to="/" />} />
-      </Routes>
-    </Router>
-    </>
-  )
-}
+    <div className="relative h-screen w-screen">
+      <EmojiBackground /> 
+      <div className="absolute inset-0">
+        <Router>
+          <Routes>
+            <Route path="/" element={<AuthComponent />} />
+            <Route path="/home" element={<Homepage />} />
+          </Routes>
+        </Router>
+      </div>
+    </div>
+  );
+};
 
-export default App
+export default App;

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { auth } from "./firebase-config";
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
+import guessyGooseImage from './assets/guessy-goose.png'; // Import the image
 import "./AuthComponent.css"; 
 
 const AuthComponent: React.FC = () => {

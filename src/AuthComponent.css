@@ -1,9 +1,9 @@
 .auth-container {
+    position: relative;
     display: flex;
     justify-content: center;
     align-items: center;
     height: 100vh;
-    background-color: #f4f4f4;
   }
   
   .auth-box {
@@ -45,6 +45,10 @@
   
   .google-button {
     margin-top: 20px;
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+    width: 100%;
   }
   
   .toggle-button {
