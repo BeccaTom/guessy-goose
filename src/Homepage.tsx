@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { auth } from "./firebase-config";
 import { signOut } from "firebase/auth";
-import ConfirmationModal from "./ConfirmationModal"; // Import the generalized modal
+import ConfirmationModal from "./ConfirmationModal.tsx"; // Import the generalized modal
 import CreateGame from "./CreateGame";
 import JoinGame from "./JoinGame"; 
 import guessyGooseImage from './assets/guessy-goose.png';
@@ -12,7 +12,7 @@ const HomePage: React.FC = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [modalTitle, setModalTitle] = useState<string>("Log Out");
   const [modalMessage, setModalMessage] = useState<string>("Are you sure you want to log out?");
-  const [confirmAction, setConfirmAction] = useState<() => void>(() => handleConfirmLogout);
+  const [confirmAction, setConfirmAction] = useState<() => void>(() => {});
   const [showCreateGame, setShowCreateGame] = useState(false);
   const [showJoinGame, setShowJoinGame] = useState(false); 
   const navigate = useNavigate();
@@ -28,6 +28,11 @@ const HomePage: React.FC = () => {
       });
   };
 
+  const handleConfirmLogout = () => {
+    setModalOpen(false);
+    handleLogout();
+  };
+
   const handleOpenModal = (title: string, message: string, action: () => void) => {
     setModalTitle(title);
     setModalMessage(message);
@@ -37,11 +42,6 @@ const HomePage: React.FC = () => {
 
   const handleCloseModal = () => {
     setModalOpen(false);
-  };
-
-  const handleConfirmLogout = () => {
-    setModalOpen(false);
-    handleLogout();
   };
 
   const handleCreateGameBack = () => {
