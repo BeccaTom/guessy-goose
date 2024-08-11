@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { auth } from "./firebase-config";
 import { signOut } from "firebase/auth";
-import ConfirmationModal from "./ConfirmationModal.tsx"; // Import the generalized modal
+import ConfirmationModal from "./ConfirmationModal"; // Import the generalized modal
 import CreateGame from "./CreateGame";
 import JoinGame from "./JoinGame"; 
 import guessyGooseImage from './assets/guessy-goose.png';
@@ -33,10 +33,10 @@ const HomePage: React.FC = () => {
     handleLogout();
   };
 
-  const handleOpenModal = (title: string, message: string, action: () => void) => {
-    setModalTitle(title);
-    setModalMessage(message);
-    setConfirmAction(() => action);
+  const handleOpenLogoutModal = () => {
+    setModalTitle("Log Out");
+    setModalMessage("Are you sure you want to log out?");
+    setConfirmAction(() => handleConfirmLogout);
     setModalOpen(true);
   };
 
@@ -44,18 +44,10 @@ const HomePage: React.FC = () => {
     setModalOpen(false);
   };
 
-  const handleCreateGameBack = () => {
-    handleOpenModal(
-      "Delete Game",
-      "Are you sure you want to go back? This will delete the current game.",
-      () => setShowCreateGame(false)
-    );
-  };
-
   return (
     <div className="relative flex flex-col items-center justify-center h-screen w-screen">
       <button
-        onClick={() => handleOpenModal("Log Out", "Are you sure you want to log out?", handleConfirmLogout)}
+        onClick={handleOpenLogoutModal}
         className="absolute top-5 right-5 bg-gray-400 text-white px-4 py-2 rounded-md hover:bg-gray-500"
       >
         Logout
@@ -67,9 +59,9 @@ const HomePage: React.FC = () => {
           Guessy Goose
         </h1>
         {showCreateGame ? (
-          <CreateGame onBack={handleCreateGameBack} />
+          <CreateGame onBack={() => setShowCreateGame(false)} />
         ) : showJoinGame ? ( 
-          <JoinGame />
+            <JoinGame onBack={() => setShowJoinGame(false)} />
         ) : (
           <div className="flex space-x-4 justify-center">
             <button

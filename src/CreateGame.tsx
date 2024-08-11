@@ -1,16 +1,21 @@
 import React, { useState, useEffect } from "react";
-import { createGame, deleteGame } from "./gameService";  // Import createGame and deleteGame functions
-import { auth } from "./firebase-config";  // Import Firebase auth
-import ConfirmationModal from "./ConfirmationModal";  // Import the ConfirmationModal component
+import { createGame, deleteGame } from "./gameService";
+import { auth, db } from "./firebase-config";
+import { useNavigate } from "react-router-dom";
+import ConfirmationModal from "./ConfirmationModal";
+import OptionlessModal from "./OptionlessModal"; // Import the OptionlessModal
+import { doc, onSnapshot, updateDoc, getDocs, where, collection, query } from "firebase/firestore"; 
 
-const CreateGame: React.FC<{ onBack: () => void }> = ({ onBack }) => {
+const CreateGame: React.FC = () => {
   const [maxPlayers, setMaxPlayers] = useState<number>(4);
   const [allowStrangers, setAllowStrangers] = useState<boolean>(false);
   const [gameCode, setGameCode] = useState<string | null>(null);
-  const [players, setPlayers] = useState<any[]>([]);  // Store the list of players
+  const [players, setPlayers] = useState<any[]>([]);
   const [isCopied, setIsCopied] = useState<boolean>(false);
   const [copiedMessage, setCopiedMessage] = useState<string>("");
   const [modalOpen, setModalOpen] = useState<boolean>(false);
+  const [gameStarting, setGameStarting] = useState<boolean>(false); // State for OptionlessModal
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (gameCode) {
@@ -21,19 +26,41 @@ const CreateGame: React.FC<{ onBack: () => void }> = ({ onBack }) => {
           username: currentUser.displayName || "Anonymous",
           profilePic: currentUser.photoURL || "https://example.com/default-profile-pic.jpg"
         };
-        setPlayers([userObject]);  // Add the current user to the list of players
+        setPlayers([userObject]);
 
-        // Cleanup effect to delete the game if the component unmounts (user navigates away)
         return () => {
-          deleteGame(gameCode).then(() => {
-            console.log("Game deleted due to navigation away from game code page.");
-          }).catch((error) => {
-            console.error("Failed to delete game:", error);
-          });
+          deleteGame(gameCode)
+            .then(() => {
+              console.log("Game deleted due to navigation away from game code page.");
+            })
+            .catch((error) => {
+              console.error("Failed to delete game:", error);
+            });
         };
       }
     }
   }, [gameCode]);
+
+  useEffect(() => {
+    if (gameCode) {
+      const q = query(collection(db, "games"), where("gameCode", "==", gameCode));
+      
+      const unsubscribe = onSnapshot(q, (querySnapshot) => {
+        if (!querySnapshot.empty) {
+          const gameDoc = querySnapshot.docs[0];
+          const gameData = gameDoc.data();
+          if (gameData?.gameState === "starting") {
+            setGameStarting(true); // Show the OptionlessModal
+            setTimeout(() => {
+              navigate(`/game-room/${gameCode}`);
+            }, 2000);
+          }
+        }
+      });
+  
+      return () => unsubscribe();
+    }
+  }, [gameCode, navigate]);
 
   const handleSubmit = async () => {
     try {
@@ -51,29 +78,49 @@ const CreateGame: React.FC<{ onBack: () => void }> = ({ onBack }) => {
       setCopiedMessage("Copied!");
       setTimeout(() => {
         setIsCopied(false);
-        setCopiedMessage(gameCode || ""); // Revert to showing the game code
+        setCopiedMessage(gameCode || "");
       }, 1500);
     }
   };
 
-  const handleStartGame = () => {
-    console.log("Game started with code:", gameCode);
-    // Implement game start logic here
+  const handleStartGame = async (code: string) => {
+    try {
+      const q = query(collection(db, "games"), where("gameCode", "==", code));
+      const querySnapshot = await getDocs(q);
+  
+      if (!querySnapshot.empty) {
+        const gameDoc = querySnapshot.docs[0];
+        const gameRef = gameDoc.ref;
+        await updateDoc(gameRef, { gameState: "starting" });
+        console.log("Game started with code:", code);
+      }
+    } catch (error) {
+      console.error("Error starting the game:", error);
+    }
   };
 
   const handleBackButton = () => {
-    setModalOpen(true);
+    if (gameCode) {
+      setModalOpen(true);
+    } else {
+      navigate("/home");
+    }
   };
 
-  const confirmBack = () => {
+  const confirmBack = async () => {
     if (gameCode) {
-      deleteGame(gameCode).then(() => {
+      try {
+        await deleteGame(gameCode);
         console.log("Game deleted by navigating back.");
+        setModalOpen(false);
         setGameCode(null);
-        onBack();
-      }).catch((error) => {
+        navigate("/home");
+      } catch (error) {
         console.error("Failed to delete game:", error);
-      });
+      }
+    } else {
+      setModalOpen(false);
+      navigate("/home");
     }
   };
 
@@ -90,7 +137,6 @@ const CreateGame: React.FC<{ onBack: () => void }> = ({ onBack }) => {
             {copiedMessage || gameCode}
           </div>
 
-          {/* Display list of players in the waiting room */}
           <div className="mt-6">
             <h3 className="text-xl mb-4">Players Joined</h3>
             <ul className="list-none p-0">
@@ -103,11 +149,10 @@ const CreateGame: React.FC<{ onBack: () => void }> = ({ onBack }) => {
             </ul>
           </div>
 
-          {/* Additional UI elements */}
           <div className="mt-6">
             <button
               className="w-full p-2 bg-blue-500 text-white rounded-md hover:bg-blue-700 mb-4"
-              onClick={handleStartGame}
+              onClick={() => handleStartGame(gameCode)}
             >
               Start Game
             </button>
@@ -116,7 +161,7 @@ const CreateGame: React.FC<{ onBack: () => void }> = ({ onBack }) => {
             onClick={handleBackButton}
             className="text-blue-500 hover:underline mt-4"
           >
-            Back to Create Game
+            Back
           </button>
         </div>
       ) : (
@@ -151,14 +196,14 @@ const CreateGame: React.FC<{ onBack: () => void }> = ({ onBack }) => {
             Create Game
           </button>
           <button
-            onClick={onBack}
+            onClick={handleBackButton}
             className="text-blue-500 hover:underline mt-4"
           >
             Back
           </button>
         </div>
       )}
-      
+
       <ConfirmationModal
         open={modalOpen}
         onClose={() => setModalOpen(false)}
@@ -168,6 +213,8 @@ const CreateGame: React.FC<{ onBack: () => void }> = ({ onBack }) => {
         confirmButtonText="Delete Game"
         cancelButtonText="Cancel"
       />
+      
+      {gameStarting && <OptionlessModal message="The game is starting! Get ready..." />}
     </div>
   );
 };

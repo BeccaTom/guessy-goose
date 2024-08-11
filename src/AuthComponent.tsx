@@ -8,8 +8,8 @@ import {
   GoogleAuthProvider,
   updateProfile
 } from "firebase/auth";
-import { doc, setDoc } from "firebase/firestore"; // Import necessary Firestore functions
-import { generateProfilePic } from "./Utils";  // Import the profile picture utility function
+import { doc, setDoc } from "firebase/firestore"; 
+import { generateProfilePic } from "./Utils";  
 import guessyGooseImage from './assets/guessy-goose.png';
 import { db } from "./firebase-config";
 import "./AuthComponent.css";
@@ -17,9 +17,9 @@ import "./AuthComponent.css";
 const AuthComponent: React.FC = () => {
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
-  const [username, setUsername] = useState<string>("");  // Add a state for username
+  const [username, setUsername] = useState<string>("");  
   const [isLogin, setIsLogin] = useState<boolean>(true);
-  const [error, setError] = useState<string>(""); // State to store error messages
+  const [error, setError] = useState<string>(""); 
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -74,7 +74,6 @@ const AuthComponent: React.FC = () => {
             photoURL: profilePicUrl
           });
 
-          // Save user data to Firestore
           await setDoc(doc(db, "users", user.uid), {
             username: username,
             email: user.email,

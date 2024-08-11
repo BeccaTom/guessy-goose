@@ -1,6 +1,7 @@
-import { collection, addDoc, deleteDoc, query, where, getDocs } from "firebase/firestore";
+import { collection, addDoc, deleteDoc, query, where, getDocs, updateDoc } from "firebase/firestore";
 import { db } from './firebase-config';
-import { auth } from "./firebase-config";  // Assuming auth is imported to get the current user
+import { auth } from "./firebase-config";  
+
 
 export const createGame = async (maxPlayers: number, allowStrangers: boolean): Promise<string> => {
     try {
@@ -56,3 +57,28 @@ export const deleteGame = async (gameCode: string) => {
         throw new Error("Failed to delete game");
     }
 };
+
+const handleStartGame = async (gameCode: string) => {
+    if (gameCode) {
+      try {
+        const q = query(collection(db, "games"), where("gameCode", "==", gameCode));
+        const querySnapshot = await getDocs(q);
+  
+        if (!querySnapshot.empty) {
+          const gameDoc = querySnapshot.docs[0];
+          const gameRef = gameDoc.ref;
+  
+          // Update the game state to "starting"
+          await updateDoc(gameRef, { gameState: "starting" });
+  
+          console.log("Game started with code:", gameCode);
+        } else {
+          console.log("No game found with the provided game code.");
+        }
+      } catch (error) {
+        console.error("Error starting the game:", error);
+      }
+    }
+  };
+
+  

@@ -4,7 +4,7 @@ import { collection, query, where, getDocs, updateDoc, arrayUnion } from "fireba
 import { db } from "./firebase-config";
 import { auth } from "./firebase-config";
 
-const JoinGame: React.FC = () => {
+const JoinGame: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   const [gameCode, setGameCode] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
@@ -63,9 +63,15 @@ const JoinGame: React.FC = () => {
       {error && <p className="text-red-500 mb-4">{error}</p>}
       <button
         onClick={handleJoinGame}
-        className="w-full p-2 bg-blue-500 text-white rounded-md hover:bg-blue-700"
+        className="w-full p-2 bg-blue-500 text-white rounded-md hover:bg-blue-700 mb-4"
       >
         Join Game
+      </button>
+      <button
+        onClick={onBack}
+        className="text-blue-500 hover:underline"
+      >
+        Back
       </button>
     </div>
   );

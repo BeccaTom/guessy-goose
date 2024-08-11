@@ -6,6 +6,7 @@ import EmojiBackground from './EmojiBackground';
 import CreateGame from "./CreateGame";
 import JoinGame from "./JoinGame";
 import GameWaitingRoom from "./GameWaitingRoom";
+import GameRoom from "./GameRoom";
 
 const App: React.FC = () => {
   return (
@@ -19,6 +20,7 @@ const App: React.FC = () => {
           <Route path="/create-game" element={<CreateGame onBack={() => {}} />} />
           <Route path="/join-game" element={<JoinGame />} />
           <Route path="/game/:gameCode" element={<GameWaitingRoom />} />
+          <Route path="/game-room/:gameCode" element={<GameRoom />} />
           </Routes>
         </Router>
       </div>

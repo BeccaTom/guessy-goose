@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
-import { doc, getDocs, query, collection, where } from "firebase/firestore";
+import { useParams, useNavigate } from "react-router-dom";
+import { doc, onSnapshot, getDocs, query, collection, where } from "firebase/firestore";
 import { db } from "./firebase-config";
+import OptionlessModal from "./OptionlessModal"; // Import the OptionlessModal
 
 interface Player {
   uid: string;
@@ -13,6 +14,8 @@ const GameWaitingRoom: React.FC = () => {
   const { gameCode } = useParams<{ gameCode: string }>();
   const [players, setPlayers] = useState<Player[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [gameStarting, setGameStarting] = useState<boolean>(false); // State for OptionlessModal
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchGameData = async () => {
@@ -41,6 +44,28 @@ const GameWaitingRoom: React.FC = () => {
     fetchGameData();
   }, [gameCode]);
 
+  useEffect(() => {
+    if (gameCode) {
+      const q = query(collection(db, "games"), where("gameCode", "==", gameCode));
+      
+      const unsubscribe = onSnapshot(q, (querySnapshot) => {
+        if (!querySnapshot.empty) {
+          const gameDoc = querySnapshot.docs[0];
+          const gameData = gameDoc.data();
+          if (gameData?.gameState === "starting") {
+            setGameStarting(true); // Show the OptionlessModal
+            setTimeout(() => {
+              navigate(`/game-room/${gameCode}`);
+            }, 2000);
+          }
+        }
+      });
+  
+      // Cleanup listener on unmount
+      return () => unsubscribe();
+    }
+  }, [gameCode, navigate]);
+
   if (error) {
     return <div className="text-red-500">{error}</div>;
   }
@@ -60,6 +85,7 @@ const GameWaitingRoom: React.FC = () => {
           </div>
         ))}
       </div>
+      {gameStarting && <OptionlessModal message="The game is starting! Get ready..." />}
     </div>
   );
 };
