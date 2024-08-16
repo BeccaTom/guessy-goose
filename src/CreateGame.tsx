@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { createGame, deleteGame } from "./gameService";
+import { createGame } from "./gameService";
 import { auth, db } from "./firebase-config";
 import { useNavigate } from "react-router-dom";
 import ConfirmationModal from "./ConfirmationModal";
-import OptionlessModal from "./OptionlessModal"; // Import the OptionlessModal
-import { doc, onSnapshot, updateDoc, getDocs, where, collection, query } from "firebase/firestore"; 
+import OptionlessModal from "./OptionlessModal";
+import { doc, onSnapshot, updateDoc, getDocs, where, collection, query } from "firebase/firestore";
 
 const CreateGame: React.FC = () => {
   const [maxPlayers, setMaxPlayers] = useState<number>(4);
@@ -14,7 +14,7 @@ const CreateGame: React.FC = () => {
   const [isCopied, setIsCopied] = useState<boolean>(false);
   const [copiedMessage, setCopiedMessage] = useState<string>("");
   const [modalOpen, setModalOpen] = useState<boolean>(false);
-  const [gameStarting, setGameStarting] = useState<boolean>(false); // State for OptionlessModal
+  const [gameStarting, setGameStarting] = useState<boolean>(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -24,19 +24,9 @@ const CreateGame: React.FC = () => {
         const userObject = {
           uid: currentUser.uid,
           username: currentUser.displayName || "Anonymous",
-          profilePic: currentUser.photoURL || "https://example.com/default-profile-pic.jpg"
+          profilePic: currentUser.photoURL || "https://example.com/default-profile-pic.jpg",
         };
         setPlayers([userObject]);
-
-        return () => {
-          deleteGame(gameCode)
-            .then(() => {
-              console.log("Game deleted due to navigation away from game code page.");
-            })
-            .catch((error) => {
-              console.error("Failed to delete game:", error);
-            });
-        };
       }
     }
   }, [gameCode]);
@@ -44,20 +34,18 @@ const CreateGame: React.FC = () => {
   useEffect(() => {
     if (gameCode) {
       const q = query(collection(db, "games"), where("gameCode", "==", gameCode));
-      
       const unsubscribe = onSnapshot(q, (querySnapshot) => {
         if (!querySnapshot.empty) {
           const gameDoc = querySnapshot.docs[0];
           const gameData = gameDoc.data();
           if (gameData?.gameState === "starting") {
-            setGameStarting(true); // Show the OptionlessModal
+            setGameStarting(true); // Trigger the "Starting Game" alert
             setTimeout(() => {
               navigate(`/game-room/${gameCode}`);
-            }, 2000);
+            }, 2000); // Navigate to the game room after 2 seconds
           }
         }
       });
-  
       return () => unsubscribe();
     }
   }, [gameCode, navigate]);
@@ -87,12 +75,18 @@ const CreateGame: React.FC = () => {
     try {
       const q = query(collection(db, "games"), where("gameCode", "==", code));
       const querySnapshot = await getDocs(q);
-  
+
       if (!querySnapshot.empty) {
         const gameDoc = querySnapshot.docs[0];
         const gameRef = gameDoc.ref;
         await updateDoc(gameRef, { gameState: "starting" });
         console.log("Game started with code:", code);
+
+        // Trigger the starting game modal immediately
+        setGameStarting(true);
+        setTimeout(() => {
+          navigate(`/game-room/${gameCode}`);
+        }, 2000); // Navigate after 2 seconds
       }
     } catch (error) {
       console.error("Error starting the game:", error);
@@ -110,13 +104,21 @@ const CreateGame: React.FC = () => {
   const confirmBack = async () => {
     if (gameCode) {
       try {
-        await deleteGame(gameCode);
-        console.log("Game deleted by navigating back.");
+        const q = query(collection(db, "games"), where("gameCode", "==", gameCode));
+        const querySnapshot = await getDocs(q);
+
+        if (!querySnapshot.empty) {
+          const gameDoc = querySnapshot.docs[0];
+          const gameRef = gameDoc.ref;
+          await updateDoc(gameRef, { gameState: "abandoned" });
+          console.log("Game marked as abandoned by navigating back.");
+        }
+
         setModalOpen(false);
         setGameCode(null);
         navigate("/home");
       } catch (error) {
-        console.error("Failed to delete game:", error);
+        console.error("Failed to mark game as abandoned:", error);
       }
     } else {
       setModalOpen(false);
