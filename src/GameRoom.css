@@ -72,3 +72,42 @@
     height: 100%;
     border-radius: 8px;
 }
+
+
+
+
+
+
+
+
+.game-room {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.players {
+  display: flex;
+  justify-content: space-around;
+  width: 100%;
+  margin-bottom: 20px;
+}
+
+.current-player {
+  width: 100%;
+  text-align: center;
+}
+
+.cards {
+  display: flex;
+  justify-content: center;
+  gap: 10px; /* Spacing between the cards */
+  margin-top: 20px;
+}
+
+.player-card {
+  width: 80px; /* Adjust the width of the card */
+  height: auto; /* Maintain aspect ratio */
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
