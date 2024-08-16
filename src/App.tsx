@@ -7,6 +7,7 @@ import CreateGame from "./CreateGame";
 import JoinGame from "./JoinGame";
 import GameWaitingRoom from "./GameWaitingRoom";
 import GameRoom from "./GameRoom";
+import Navbar from './Navbar';
 
 const App: React.FC = () => {
   return (
@@ -14,6 +15,7 @@ const App: React.FC = () => {
       <EmojiBackground /> 
       <div className="absolute inset-0">
         <Router>
+        <Navbar />
           <Routes>
           <Route path="/" element={<AuthComponent />} />
           <Route path="/home" element={<Homepage />} />

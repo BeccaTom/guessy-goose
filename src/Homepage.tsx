@@ -46,13 +46,6 @@ const HomePage: React.FC = () => {
 
   return (
     <div className="relative flex flex-col items-center justify-center h-screen w-screen">
-      <button
-        onClick={handleOpenLogoutModal}
-        className="absolute top-5 right-5 bg-gray-400 text-white px-4 py-2 rounded-md hover:bg-gray-500"
-      >
-        Logout
-      </button>
-
       <div className="text-center">
         <img src={guessyGooseImage} alt="Guessy Goose" className="mb-4 w-32 h-auto mx-auto" />
         <h1 className="text-7xl font-extrabold mb-6 text-customDarkGray tracking-tight text-shadow-sm">

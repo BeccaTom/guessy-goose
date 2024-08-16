@@ -54,6 +54,7 @@ const modalStyles = {
   },
   modal: {
     background: "#fff",
+    fontColor: "#383838",
     padding: "20px",
     borderRadius: "8px",
     maxWidth: "400px",

@@ -6,6 +6,7 @@ import {
   signInWithEmailAndPassword,
   signInWithPopup,
   GoogleAuthProvider,
+  onAuthStateChanged,
   updateProfile
 } from "firebase/auth";
 import { doc, setDoc } from "firebase/firestore"; 
@@ -23,21 +24,15 @@ const AuthComponent: React.FC = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (window.google) {
-      window.google.accounts.id.initialize({
-        client_id: "YOUR_GOOGLE_CLIENT_ID",
-        callback: handleGoogleSignIn,
-      });
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        // User is signed in, redirect to home page
+        navigate("/home");
+      }
+    });
 
-      window.google.accounts.id.renderButton(
-        document.getElementById("google-sign-in")!,
-        {
-          theme: "outline",
-          size: "large",
-        }
-      );
-    }
-  }, []);
+    return () => unsubscribe();
+  }, [navigate]);
 
   const handleAuthAction = async () => {
     setError(""); // Clear previous errors
@@ -47,19 +42,7 @@ const AuthComponent: React.FC = () => {
         console.log("Logged in:", userCredential.user);
         navigate("/home");
       } catch (error: any) {
-        switch (error.code) {
-          case 'auth/user-not-found':
-            setError("No user found with this email.");
-            break;
-          case 'auth/wrong-password':
-            setError("Incorrect password.");
-            break;
-          case 'auth/too-many-requests':
-            setError("Too many unsuccessful login attempts. Please try again later.");
-            break;
-          default:
-            setError("An error occurred during login. Please try again.");
-        }
+        handleAuthError(error);
       }
     } else {
       try {
@@ -84,23 +67,29 @@ const AuthComponent: React.FC = () => {
         console.log("Account created:", user);
         navigate("/home");
       } catch (error: any) {
-        switch (error.code) {
-          case 'auth/email-already-in-use':
-            setError("This email is already in use. Please use a different email.");
-            break;
-          case 'auth/weak-password':
-            setError("Password must be at least 6 characters long.");
-            break;
-          default:
-            setError("An error occurred during account creation. Please try again.");
-        }
+        handleAuthError(error);
       }
+    }
+  };
+
+  const handleAuthError = (error: any) => {
+    switch (error.code) {
+      case 'auth/user-not-found':
+        setError("No user found with this email.");
+        break;
+      case 'auth/wrong-password':
+        setError("Incorrect password.");
+        break;
+      case 'auth/too-many-requests':
+        setError("Too many unsuccessful login attempts. Please try again later.");
+        break;
+      default:
+        setError("An error occurred during login. Please try again.");
     }
   };
 
   const handleGoogleSignIn = async (response: any) => {
     try {
-      const credential = GoogleAuthProvider.credential(response.credential);
       const result = await signInWithPopup(auth, new GoogleAuthProvider());
       console.log("Google Sign-In successful:", result.user);
       navigate("/home");
