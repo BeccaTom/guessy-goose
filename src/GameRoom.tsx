@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import { db, auth } from './firebase-config'; 
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import './GameRoom.css';
+import CardViewerModal from './CardViewerModal';
 
 interface Player {
   uid: string;
@@ -15,6 +16,8 @@ const GameRoom: React.FC = () => {
   const [players, setPlayers] = useState<Player[]>([]);
   const [currentUser, setCurrentUser] = useState<Player | null>(null);
   const [playerHands, setPlayerHands] = useState<{ [key: string]: string[] }>({});
+  const [modalOpen, setModalOpen] = useState<boolean>(false);
+  const [currentCardIndex, setCurrentCardIndex] = useState<number>(0);
 
   useEffect(() => {
     const fetchGameAndPlayers = async () => {
@@ -45,12 +48,22 @@ const GameRoom: React.FC = () => {
     fetchGameAndPlayers();
   }, [gameCode]);
 
-  useEffect(() => {
-    if (currentUser) {
-      console.log("Current User UID:", currentUser.uid);
-      console.log("Player Hands:", playerHands);
-    }
-  }, [currentUser, playerHands]);
+  const handleCardClick = (index: number) => {
+    setCurrentCardIndex(index);
+    setModalOpen(true);
+  };
+
+  const handlePrevCard = () => {
+    setCurrentCardIndex((prevIndex) => (prevIndex > 0 ? prevIndex - 1 : playerHands[currentUser?.uid || ''].length - 1));
+  };
+
+  const handleNextCard = () => {
+    setCurrentCardIndex((prevIndex) => (prevIndex < playerHands[currentUser?.uid || ''].length - 1 ? prevIndex + 1 : 0));
+  };
+
+  const handleCloseModal = () => {
+    setModalOpen(false);
+  };
 
   return (
     <div className="game-room">
@@ -70,7 +83,13 @@ const GameRoom: React.FC = () => {
           <div className="cards">
             {playerHands[currentUser.uid]?.length > 0 ? (
               playerHands[currentUser.uid].map((url, index) => (
-                <img key={`${currentUser.uid}-${index}`} src={url} alt={`Card ${index + 1}`} className="player-card" />
+                <img
+                  key={`${currentUser.uid}-${index}`}
+                  src={url}
+                  alt={`Card ${index + 1}`}
+                  className="player-card"
+                  onClick={() => handleCardClick(index)}
+                />
               ))
             ) : (
               <p>No cards to display</p>
@@ -78,6 +97,15 @@ const GameRoom: React.FC = () => {
           </div>
         </div>
       )}
+
+      <CardViewerModal
+        isOpen={modalOpen}
+        cards={playerHands[currentUser?.uid || ''] || []}
+        currentIndex={currentCardIndex}
+        onClose={handleCloseModal}
+        onPrev={handlePrevCard}
+        onNext={handleNextCard}
+      />
     </div>
   );
 };

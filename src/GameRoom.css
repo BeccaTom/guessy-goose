@@ -101,13 +101,70 @@
 .cards {
   display: flex;
   justify-content: center;
-  gap: 10px; /* Spacing between the cards */
+  gap: 10px;  
   margin-top: 20px;
 }
 
 .player-card {
-  width: 80px; /* Adjust the width of the card */
-  height: auto; /* Maintain aspect ratio */
+  width: 80px;  
+  height: auto;  
   border-radius: 8px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+
+.cards img {
+  transition: transform 0.2s ease-in-out;
+  cursor: pointer;
+}
+
+.cards img:hover {
+  transform: translateY(-10px) scale(1.1);
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background-color: white;
+  padding: 20px;
+  border-radius: 8px;
+  max-width: 90%;
+  max-height: 90%;
+  text-align: center;
+}
+
+.modal-content img {
+  max-width: 100%;
+  max-height: 80vh;
+}
+
+.carousel-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 10px;
+}
+
+.carousel-button {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.carousel-button:hover {
+  background-color: #0056b3;
 }
