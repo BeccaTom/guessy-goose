@@ -16,6 +16,8 @@ const GameRoom: React.FC = () => {
   const [players, setPlayers] = useState<Player[]>([]);
   const [currentUser, setCurrentUser] = useState<Player | null>(null);
   const [playerHands, setPlayerHands] = useState<{ [key: string]: string[] }>({});
+  const [currentTurn, setCurrentTurn] = useState<string | null>(null);
+  const [turnMessage, setTurnMessage] = useState<string | null>(null);
   const [modalOpen, setModalOpen] = useState<boolean>(false);
   const [currentCardIndex, setCurrentCardIndex] = useState<number>(0);
 
@@ -42,11 +44,22 @@ const GameRoom: React.FC = () => {
         }
 
         setPlayerHands(gameData?.playerHands || {});
+        setCurrentTurn(gameData.currentTurn || null);
       }
     };
 
     fetchGameAndPlayers();
   }, [gameCode]);
+
+  useEffect(() => {
+    if (currentTurn) {
+      const player = players.find(p => p.uid === currentTurn);
+      if (player) {
+        setTurnMessage(`It's ${player.username}'s turn 🤓`);
+        setTimeout(() => setTurnMessage(null), 3000);
+      }
+    }
+  }, [currentTurn, players]);
 
   const handleCardClick = (index: number) => {
     setCurrentCardIndex(index);
@@ -67,10 +80,14 @@ const GameRoom: React.FC = () => {
 
   return (
     <div className="game-room">
-      {/* Display all players around the edge */}
+      {turnMessage && <div className="turn-message">{turnMessage}</div>}
+
       <div className="players">
         {players.map((player, index) => (
-          <div key={`${player.uid}-${index}`} className={`player player-${index}`}>
+          <div 
+            key={`${player.uid}-${index}`} 
+            className={`player player-${index} ${currentTurn === player.uid ? 'current-turn' : ''}`}
+          >
             <img src={player.profilePic} alt={player.username} className="player-profile-pic" />
             <span>{player.username}</span>
           </div>

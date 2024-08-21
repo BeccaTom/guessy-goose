@@ -81,30 +81,39 @@ const CreateGame: React.FC = () => {
         const gameRef = gameDoc.ref;
         const gameData = gameDoc.data();
   
-         const updatedPlayerHands = { ...gameData.playerHands };
-  
+        // Create player hands
+        const updatedPlayerHands = { ...gameData.playerHands };
         for (const player of gameData.playersJoined) {
           const playerUID = player.uid;
           const shuffledCards = await getShuffledCards();
           updatedPlayerHands[playerUID] = shuffledCards;
         }
   
-         await updateDoc(gameRef, { 
-          playerHands: updatedPlayerHands, 
-          gameState: "starting" 
+        // Select a random player to go first
+        const playersJoined = gameData.playersJoined;
+        const randomIndex = Math.floor(Math.random() * playersJoined.length);
+        const firstPlayerUID = playersJoined[randomIndex].uid;
+  
+        // Update Firestore with player hands and set the first turn
+        await updateDoc(gameRef, {
+          playerHands: updatedPlayerHands,
+          gameState: "starting",
+          currentTurn: firstPlayerUID,
         });
   
         console.log("Player hands assigned to all players:", updatedPlayerHands);
+        console.log("First player's turn assigned:", firstPlayerUID);
   
-         setGameStarting(true);
+        setGameStarting(true);
         setTimeout(() => {
           navigate(`/game-room/${gameCode}`);
-        }, 2000);  
+        }, 2000);
       }
     } catch (error) {
       console.error("Error starting the game:", error);
     }
   };
+  
 
   const getShuffledCards = async () => {
     try {
