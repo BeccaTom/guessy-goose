@@ -26,8 +26,7 @@ const AuthComponent: React.FC = () => {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
-        // User is signed in, redirect to home page
-        navigate("/home");
+         navigate("/home");
       }
     });
 
@@ -35,7 +34,7 @@ const AuthComponent: React.FC = () => {
   }, [navigate]);
 
   const handleAuthAction = async () => {
-    setError(""); // Clear previous errors
+    setError("");  
     if (isLogin) {
       try {
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
@@ -105,7 +104,7 @@ const AuthComponent: React.FC = () => {
         <h1 className="text-5xl font-extrabold mb-6 text-customDarkGray tracking-tight">Guessy Goose</h1>
 
         <h2 className="text-xl font-extrabold">{isLogin ? "Login" : "Sign Up"}</h2>
-        {error && <div className="text-red-500 mb-4">{error}</div>} {/* Display error message */}
+        {error && <div className="text-red-500 mb-4">{error}</div>} 
         {!isLogin && (
           <input
             type="text"

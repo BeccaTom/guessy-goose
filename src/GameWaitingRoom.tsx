@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { doc, onSnapshot, getDocs, query, collection, where } from "firebase/firestore";
 import { db } from "./firebase-config";
-import OptionlessModal from "./OptionlessModal"; // Import the OptionlessModal
+import OptionlessModal from "./OptionlessModal";  
 
 interface Player {
   uid: string;
@@ -14,7 +14,7 @@ const GameWaitingRoom: React.FC = () => {
   const { gameCode } = useParams<{ gameCode: string }>();
   const [players, setPlayers] = useState<Player[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [gameStarting, setGameStarting] = useState<boolean>(false); // State for OptionlessModal
+  const [gameStarting, setGameStarting] = useState<boolean>(false);  
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -24,7 +24,7 @@ const GameWaitingRoom: React.FC = () => {
         const querySnapshot = await getDocs(q);
   
         if (!querySnapshot.empty) {
-          const gameDoc = querySnapshot.docs[0]; // Assuming game codes are unique and using the first match
+          const gameDoc = querySnapshot.docs[0];  
           const gameData = gameDoc.data();
 
           if (gameData) {
@@ -53,7 +53,7 @@ const GameWaitingRoom: React.FC = () => {
           const gameDoc = querySnapshot.docs[0];
           const gameData = gameDoc.data();
           if (gameData?.gameState === "starting") {
-            setGameStarting(true); // Show the OptionlessModal
+            setGameStarting(true); 
             setTimeout(() => {
               navigate(`/game-room/${gameCode}`);
             }, 2000);
@@ -61,8 +61,7 @@ const GameWaitingRoom: React.FC = () => {
         }
       });
   
-      // Cleanup listener on unmount
-      return () => unsubscribe();
+       return () => unsubscribe();
     }
   }, [gameCode, navigate]);
 

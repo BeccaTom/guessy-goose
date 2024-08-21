@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { db } from './firebase-config';
-import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
+import { db, auth } from './firebase-config'; 
+import { collection, query, where, getDocs } from 'firebase/firestore';
 import './GameRoom.css';
 
 interface Player {
@@ -18,6 +18,8 @@ const GameRoom: React.FC = () => {
 
   useEffect(() => {
     const fetchGameAndPlayers = async () => {
+      if (!gameCode) return;
+
       const q = query(collection(db, "games"), where("gameCode", "==", gameCode));
       const querySnapshot = await getDocs(q);
 
@@ -25,19 +27,17 @@ const GameRoom: React.FC = () => {
         const gameDoc = querySnapshot.docs[0];
         const gameData = gameDoc.data();
 
-        // Set players
         setPlayers(gameData?.playersJoined || []);
 
-        // Assuming you have a real auth system in place to get the UID
-        const currentUserUID = "0HBYEu2NSkY3PmZstM8lfLQPp2L2"; // Example UID
-        const user = {
-          uid: currentUserUID,
-          username: "Current User",
-          profilePic: "currentUserProfilePic",
-        };
-        setCurrentUser(user);
+        const currentUserUID = auth.currentUser?.uid;
 
-        // Set player hands
+        if (currentUserUID) {
+          const user = gameData.playersJoined.find((player: Player) => player.uid === currentUserUID);
+          if (user) {
+            setCurrentUser(user);
+          }
+        }
+
         setPlayerHands(gameData?.playerHands || {});
       }
     };

@@ -4,7 +4,7 @@ import { auth, db } from "./firebase-config";
 import { useNavigate } from "react-router-dom";
 import ConfirmationModal from "./ConfirmationModal";
 import OptionlessModal from "./OptionlessModal";
-import { doc, onSnapshot, updateDoc, getDocs, where, collection, query } from "firebase/firestore";
+import { onSnapshot, updateDoc, getDocs, where, collection, query } from "firebase/firestore";
 
 const CreateGame: React.FC = () => {
   const [maxPlayers, setMaxPlayers] = useState<number>(4);
@@ -39,10 +39,10 @@ const CreateGame: React.FC = () => {
           const gameDoc = querySnapshot.docs[0];
           const gameData = gameDoc.data();
           if (gameData?.gameState === "starting") {
-            setGameStarting(true); // Trigger the "Starting Game" alert
+            setGameStarting(true);  
             setTimeout(() => {
               navigate(`/game-room/${gameCode}`);
-            }, 2000); // Navigate to the game room after 2 seconds
+            }, 2000);  
           }
         }
       });
@@ -75,23 +75,49 @@ const CreateGame: React.FC = () => {
     try {
       const q = query(collection(db, "games"), where("gameCode", "==", code));
       const querySnapshot = await getDocs(q);
-
+  
       if (!querySnapshot.empty) {
         const gameDoc = querySnapshot.docs[0];
         const gameRef = gameDoc.ref;
-        await updateDoc(gameRef, { gameState: "starting" });
-        console.log("Game started with code:", code);
-
-        // Trigger the starting game modal immediately
-        setGameStarting(true);
+        const gameData = gameDoc.data();
+  
+         const updatedPlayerHands = { ...gameData.playerHands };
+  
+        for (const player of gameData.playersJoined) {
+          const playerUID = player.uid;
+          const shuffledCards = await getShuffledCards();
+          updatedPlayerHands[playerUID] = shuffledCards;
+        }
+  
+         await updateDoc(gameRef, { 
+          playerHands: updatedPlayerHands, 
+          gameState: "starting" 
+        });
+  
+        console.log("Player hands assigned to all players:", updatedPlayerHands);
+  
+         setGameStarting(true);
         setTimeout(() => {
           navigate(`/game-room/${gameCode}`);
-        }, 2000); // Navigate after 2 seconds
+        }, 2000);  
       }
     } catch (error) {
       console.error("Error starting the game:", error);
     }
   };
+
+  const getShuffledCards = async () => {
+    try {
+      const cardsRef = collection(db, "cards");
+      const cardsSnapshot = await getDocs(cardsRef);
+      const allCards = cardsSnapshot.docs.map(doc => doc.data().url);
+  
+       return allCards.sort(() => Math.random() - 0.5).slice(0, 5);
+    } catch (error) {
+      console.error("Error fetching cards:", error);
+      return [];
+    }
+  };  
 
   const handleBackButton = () => {
     if (gameCode) {

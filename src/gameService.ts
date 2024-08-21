@@ -13,8 +13,7 @@ export const createGame = async (maxPlayers: number, allowStrangers: boolean): P
   
       const gameCode = Math.random().toString(36).substr(2, 6).toUpperCase();
   
-      // Create user object for the creator
-      const userObject = {
+       const userObject = {
         uid: currentUser.uid,
         username: currentUser.displayName || "Anonymous",
         profilePic: currentUser.photoURL || "https://example.com/default-profile-pic.jpg"
@@ -26,7 +25,8 @@ export const createGame = async (maxPlayers: number, allowStrangers: boolean): P
         gameCode: gameCode,
         createdAt: new Date(),
         creator: userObject,
-        playersJoined: [userObject]  // Add the creator to the list of players joined
+        playersJoined: [userObject],
+        playerHands: {}   
       };
   
       const docRef = await addDoc(collection(db, "games"), gameData);
@@ -68,8 +68,7 @@ const handleStartGame = async (gameCode: string) => {
           const gameDoc = querySnapshot.docs[0];
           const gameRef = gameDoc.ref;
   
-          // Update the game state to "starting"
-          await updateDoc(gameRef, { gameState: "starting" });
+           await updateDoc(gameRef, { gameState: "starting" });
   
           console.log("Game started with code:", gameCode);
         } else {
