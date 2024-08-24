@@ -4,6 +4,7 @@ import { db, auth } from './firebase-config';
 import { collection, query, where, getDocs, updateDoc, onSnapshot } from 'firebase/firestore';
 import './GameRoom.css';
 import CardViewerModal from './CardViewerModal';
+import Toast from './Toast';
 
 interface Player {
   uid: string;
@@ -21,12 +22,13 @@ const GameRoom: React.FC = () => {
   const [hintModalOpen, setHintModalOpen] = useState<boolean>(false);
   const [selectedCardIndex, setSelectedCardIndex] = useState<number | null>(null);
   const [hintText, setHintText] = useState<string>('');
-  const [showcasedCard, setShowcasedCard] = useState<string | null>(null);
-  const [selectionMessage, setSelectionMessage] = useState<string | null>(null);
-  const [wordMessage, setWordMessage] = useState<string | null>(null);
-  const [displayHint, setDisplayHint] = useState<boolean>(false);
   const [modalOpen, setModalOpen] = useState<boolean>(false);
   const [currentCardIndex, setCurrentCardIndex] = useState<number>(0);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [hintSubmitted, setHintSubmitted] = useState<boolean>(false);
+  const [flippedCardVisible, setFlippedCardVisible] = useState<boolean>(false);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [currentHintText, setCurrentHintText] = useState<string | null>(null); // New state for keeping hint visible
 
   useEffect(() => {
     if (!gameCode) return;
@@ -45,29 +47,44 @@ const GameRoom: React.FC = () => {
           const user = gameData.playersJoined.find((player: Player) => player.uid === currentUserUID);
           if (user) {
             setCurrentUser(user);
+            setHintSubmitted(gameData?.hintSubmitted || false); 
           }
         }
 
         setPlayerHands(gameData?.playerHands || {});
         setCurrentTurn(gameData.currentTurn || null);
-        setShowcasedCard(gameData?.showcasedCard || null);
-        setSelectionMessage(gameData?.selectionMessage || null);
-        setWordMessage(gameData?.wordMessage || null);
-        setDisplayHint(gameData?.displayHint || false);
+        setFlippedCardVisible(gameData.flippedCardVisible || false);
+
+        if (gameData.selectionMessage) {
+          triggerToastSequence(gameData.selectionMessage, "The word is...", gameData.hintText);
+        }
       }
     });
 
-    return () => unsubscribe(); // Cleanup on component unmount
+    return () => unsubscribe(); 
   }, [gameCode]);
 
   useEffect(() => {
-    if (currentTurn) {
-      const player = players.find(p => p.uid === currentTurn);
-      if (player) {
-        setTurnMessage(`It's ${player.username}'s turn 🤓`);
-      }
+    if (currentTurn !== currentUser?.uid) {
+      setCurrentHintText(null);  
     }
-  }, [currentTurn, players]);
+  }, [currentTurn, currentUser]);
+
+  const triggerToastSequence = (selectionMsg: string, wordMsg: string, hintMsg: string) => {
+     
+    setToastMessage(selectionMsg);
+
+    
+    setTimeout(() => {
+      setToastMessage(wordMsg);
+
+       
+      setTimeout(() => {
+        setToastMessage(null);
+        setCurrentHintText(hintMsg);  
+      }, 3000);
+    }, 3000);
+  };
 
   const handleSelectClick = (index: number) => {
     setSelectedCardIndex(index);
@@ -75,47 +92,43 @@ const GameRoom: React.FC = () => {
   };
 
   const handleHintSubmit = async () => {
-    if (selectedCardIndex !== null && currentUser) {
-        const selectedCardUrl = playerHands[currentUser.uid][selectedCardIndex];
-        
-        setHintModalOpen(false);
-        setHintText('');
-        setSelectionMessage(`${currentUser.username} has selected their card!`);
-
-        const q = query(collection(db, "games"), where("gameCode", "==", gameCode));
-        const querySnapshot = await getDocs(q);
-
-        if (!querySnapshot.empty) {
-            const gameDoc = querySnapshot.docs[0];
-            const gameRef = gameDoc.ref;
-            
-            await updateDoc(gameRef, {
-                showcasedCard: selectedCardUrl,
-                selectionMessage: `${currentUser.username} has selected their card!`,
-            });
-
-            setTimeout(async () => {
-                await updateDoc(gameRef, {
-                    selectionMessage: null,
-                    wordMessage: "The word is...",
-                });
-
-                setTimeout(async () => {
-                    await updateDoc(gameRef, {
-                        wordMessage: null,
-                        displayHint: true,
-                    });
-                }, 3000);
-
-            }, 3000);
-        }
+    if (!hintText.trim()) {
+      setErrorMessage("You must submit a hint."); 
+      return;
     }
-};
 
+    if (selectedCardIndex !== null && currentUser) {
+      const selectedCardUrl = playerHands[currentUser.uid][selectedCardIndex];
+      
+      setHintModalOpen(false);
+      setErrorMessage(null);
+
+      const q = query(collection(db, "games"), where("gameCode", "==", gameCode));
+      const querySnapshot = await getDocs(q);
+
+      if (!querySnapshot.empty) {
+        const gameDoc = querySnapshot.docs[0];
+        const gameRef = gameDoc.ref;
+
+        await updateDoc(gameRef, {
+          showcasedCard: selectedCardUrl,
+          hintText: hintText, 
+          flippedCardVisible: true, 
+          hintSubmitted: true,
+          selectionMessage: `${currentUser.username} has selected their card!`, 
+        });
+
+        setHintSubmitted(true); 
+      }
+
+      setHintText('');
+    }
+  };
 
   const handleHintModalClose = () => {
     setHintModalOpen(false);
     setHintText('');
+    setErrorMessage(null);
   };
 
   const handleCardClick = (index: number) => {
@@ -138,17 +151,6 @@ const GameRoom: React.FC = () => {
   return (
     <div className="game-room">
       {turnMessage && <div className="turn-message">{turnMessage}</div>}
-      {selectionMessage && <div className="selection-message">{selectionMessage}</div>}
-      {showcasedCard && (
-        <div className="showcased-card-container">
-          <div className="flipped-card">
-            <img src="./assets/guessy-goose.png" alt="Guessy Goose" className="guessygoose-image" />
-          </div>
-        </div>
-      )}
-      {wordMessage && <div className="word-message">{wordMessage}</div>}
-      {displayHint && <div className="hint-text">{hintText}</div>}
-
       <div className="players">
         {players.map((player, index) => (
           <div 
@@ -160,11 +162,19 @@ const GameRoom: React.FC = () => {
           </div>
         ))}
       </div>
-        
-      {currentUser && (
-        <div className="current-player">
+
+      {flippedCardVisible && (
+        <div className="showcased-card-container">
+          <div className="flipped-card">
+            <img src="./assets/guessy-goose.png" alt="Guessy Goose" className="guessygoose-image" />
+          </div>
+        </div>
+      )}
+
+      <div className="current-player">
+        {!hintSubmitted && (
           <div className="select-buttons">
-            {playerHands[currentUser.uid]?.length > 0 && currentTurn === currentUser.uid && (
+            {playerHands[currentUser?.uid]?.length > 0 && currentTurn === currentUser?.uid && (
               playerHands[currentUser.uid].map((_, index) => (
                 <button 
                   key={`select-${index}`} 
@@ -176,21 +186,27 @@ const GameRoom: React.FC = () => {
               ))
             )}
           </div>
-          <div className="cards">
-            {playerHands[currentUser.uid]?.length > 0 ? (
-              playerHands[currentUser.uid].map((url, index) => (
-                <img
-                  key={`${currentUser.uid}-${index}`}
-                  src={url}
-                  alt={`Card ${index + 1}`}
-                  className="player-card"
-                  onClick={() => handleCardClick(index)}
-                />
-              ))
-            ) : (
-              <p>No cards to display</p>
-            )}
-          </div>
+        )}
+        <div className="cards">
+          {playerHands[currentUser?.uid]?.length > 0 ? (
+            playerHands[currentUser.uid].map((url, index) => (
+              <img
+                key={`${currentUser.uid}-${index}`}
+                src={url}
+                alt={`Card ${index + 1}`}
+                className="player-card"
+                onClick={() => handleCardClick(index)}
+              />
+            ))
+          ) : (
+            <p>No cards to display</p>
+          )}
+        </div>
+      </div>
+
+      {currentHintText && (
+        <div className="hint-text">
+          <strong>Hint:</strong> {currentHintText}
         </div>
       )}
 
@@ -203,6 +219,12 @@ const GameRoom: React.FC = () => {
         onNext={handleNextCard}
       />
 
+      {toastMessage && (
+        <div className="toast-container">
+          <Toast message={toastMessage} />
+        </div>
+      )}
+
       {hintModalOpen && (
         <div className="hint-modal-overlay" onClick={handleHintModalClose}>
           <div className="hint-modal-content" onClick={e => e.stopPropagation()}>
@@ -213,6 +235,7 @@ const GameRoom: React.FC = () => {
               value={hintText} 
               onChange={(e) => setHintText(e.target.value)} 
             />
+            {errorMessage && <p className="error-message">{errorMessage}</p>}
             <button onClick={handleHintSubmit} className="submit-hint-btn">Submit</button>
           </div>
         </div>
